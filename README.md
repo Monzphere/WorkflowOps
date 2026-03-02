@@ -2,7 +2,8 @@
 
 Zabbix module that provides a visual correlation view of Problems, Triggers and Actions. The workflow shows the relationship Host → Item → Trigger → Problem → Actions → Media types → Recipients.
 
-<img width="1459" height="760" alt="image" src="https://github.com/user-attachments/assets/790d36b7-d610-4d20-9286-97753e749cac" />
+<img width="1457" height="761" alt="image" src="https://github.com/user-attachments/assets/72c6738e-fbae-426d-99f4-efaee4708e86" />
+
 
 
 ## Requirements
