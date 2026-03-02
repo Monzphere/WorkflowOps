@@ -253,7 +253,6 @@ jQuery(document).ready(function() {
 			applyView();
 		}
 
-		/* Pan via arrastar */
 		function isInteractive(target) {
 			return target.closest('a, button, [role="button"], input, select, textarea, .mnz-workflow-minimap');
 		}
@@ -288,7 +287,7 @@ jQuery(document).ready(function() {
 		document.addEventListener('mousemove', onCanvasMouseMove);
 		document.addEventListener('mouseup', onCanvasMouseUp);
 
-		/* Ctrl + scroll para zoom (atalho seguro) - no canvas e minimap */
+
 		function onZoomWheel(e) {
 			if (e.ctrlKey || e.metaKey) {
 				e.preventDefault();
@@ -299,7 +298,6 @@ jQuery(document).ready(function() {
 		var minimapEl = document.querySelector('.mnz-workflow-minimap');
 		if (minimapEl) minimapEl.addEventListener('wheel', onZoomWheel, { passive: false });
 
-		/* Botões de zoom */
 		var toolbar = document.querySelector('.mnz-workflow-zoom-toolbar');
 		if (toolbar) {
 			var zoomIn = toolbar.querySelector('[data-zoom="in"]');
@@ -518,7 +516,6 @@ jQuery(document).ready(function() {
 	initMinimap();
 	initExportPdf();
 	window.addEventListener('load', initWorkflowSvg);
-	// Popover de Actions: ícone clicável abre overlay com tabela completa
 	var popId = null;
 	function closeActionsPopover() {
 		var pop = document.getElementById('mnz-workflow-actions-popover');
@@ -584,7 +581,6 @@ jQuery(document).ready(function() {
 		if (id) showActionsPopover(id, this);
 	});
 
-	// Tags: clique no ícone abre popover com lista de tags
 	var tagsPopoverId = null;
 	function closeTagsPopover() {
 		var pop = document.getElementById('mnz-workflow-tags-popover');
@@ -646,7 +642,6 @@ jQuery(document).ready(function() {
 		}
 	});
 
-	// Execute now: botão no node Item chama view.executeNow e mostra mensagem de sucesso/erro
 	jQuery(document).off('click', '.mnz-workflow-item-exec-now').on('click', '.mnz-workflow-item-exec-now', function(e) {
 		e.preventDefault();
 		var btn = this;
@@ -655,7 +650,6 @@ jQuery(document).ready(function() {
 		window.view.executeNow(btn, { itemids: [itemid] });
 	});
 
-	// Analysis (heatmap): ícone no Problem abre modal com heatmap interativo
 	var analysisOverlayId = null;
 	function closeAnalysisOverlay() {
 		var el = document.getElementById('mnz-workflow-analysis-overlay');
@@ -929,7 +923,6 @@ jQuery(document).ready(function() {
 		if (eventid) showAnalysisOverlay(eventid);
 	});
 
-	// Expandir gráfico: clique no spark abre overlay com chart maior
 	var chartOverlayId = null;
 	function closeChartOverlay() {
 		var el = document.getElementById('mnz-workflow-chart-overlay');
@@ -988,7 +981,6 @@ jQuery(document).ready(function() {
 		}
 	});
 
-	// Update problem: abre popup para ack, mensagem, severidade, etc.
 	jQuery(document).off('click', '.mnz-workflow-problem-update').on('click', '.mnz-workflow-problem-update', function(e) {
 		e.preventDefault();
 		var eventid = jQuery(this).attr('data-eventid');
@@ -997,7 +989,6 @@ jQuery(document).ready(function() {
 		}
 	});
 
-	// Refresh via AJAX (igual problem view) - sem reload da página
 	function wfRefreshContent() {
 		if (!wfRefreshUrl) return;
 		var el = document.getElementById('mnz-workflow-content');
@@ -1032,7 +1023,6 @@ jQuery(document).ready(function() {
 	}
 	window.mnzWorkflowRefresh = wfRefreshContent;
 
-	// Ao submeter ack/msg: refresh sem reload (como Zabbix Problems)
 	jQuery.subscribe('acknowledge.create', function() {
 		if (window.location.href.indexOf('action=workflow.ops.view') !== -1 && wfRefreshUrl) {
 			wfRefreshContent();
