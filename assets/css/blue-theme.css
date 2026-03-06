@@ -417,6 +417,22 @@
 	border-left: 4px solid #495057;
 }
 
+.mnz-workflow-card-trigger-primary {
+	border-left: 4px solid #d32f2f;
+}
+
+.mnz-workflow-card-badge-small {
+	display: inline-block;
+	font-size: 10px;
+	font-weight: 600;
+	padding: 1px 6px;
+	border-radius: 3px;
+	background: rgba(211, 47, 47, 0.1);
+	color: #d32f2f;
+	margin-left: 6px;
+	vertical-align: middle;
+}
+
 .mnz-workflow-card-metrics {
 	border-left: 4px solid #17a2b8;
 }

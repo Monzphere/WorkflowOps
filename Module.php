@@ -7,6 +7,5 @@ use Zabbix\Core\CModule;
 class Module extends CModule {
 
 	public function init(): void {
-		// Workflow disponível apenas pelo ícone na página de problema e pelo widget
 	}
 }

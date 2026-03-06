@@ -45,7 +45,7 @@ class CControllerWorkflowOpsIncidentAnalysis extends CController {
 			exit;
 		}
 
-		$six_months_events = [];
+		$history_events = [];
 		$all_events = API::Event()->get([
 			'output' => ['eventid', 'clock', 'value', 'severity', 'name'],
 			'source' => EVENT_SOURCE_TRIGGERS,
@@ -64,12 +64,12 @@ class CControllerWorkflowOpsIncidentAnalysis extends CController {
 				if (!empty($pending)) {
 					$p = array_shift($pending);
 					$p['r_clock'] = $evt['clock'];
-					$six_months_events[] = $p;
+					$history_events[] = $p;
 				}
 			}
 		}
 		foreach ($pending as $p) {
-			$six_months_events[] = $p;
+			$history_events[] = $p;
 		}
 
 		$triggers = API::Trigger()->get([
@@ -90,7 +90,7 @@ class CControllerWorkflowOpsIncidentAnalysis extends CController {
 
 		$maintenances = $this->getMaintenancesInPeriod($hostid, $host, strtotime('-12 months'), time());
 
-		$pattern_events = $six_months_events;
+		$pattern_events = $history_events;
 		$event_clocks = array_column($pattern_events, 'clock');
 
 		$user_lang = (CWebUser::$data && isset(CWebUser::$data['lang'])) ? CWebUser::$data['lang'] : null;
@@ -179,18 +179,17 @@ class CControllerWorkflowOpsIncidentAnalysis extends CController {
 			'maintIconClass' => 'zi zi-wrench-alt-small'
 		];
 
+		$monthly_counts = array_fill_keys($month_keys, 0);
 		foreach ($pattern_events as $e) {
 			$chart_data['hourly'][(int) date('G', $e['clock'])]++;
 			$chart_data['weekly'][(int) date('w', $e['clock'])]++;
+			$mk = date('Y-m', $e['clock']);
+			if (isset($monthly_counts[$mk])) {
+				$monthly_counts[$mk]++;
+			}
 		}
 		foreach ($month_keys as $mk) {
-			$cnt = 0;
-			foreach ($pattern_events as $e) {
-				if (date('Y-m', $e['clock']) === $mk) {
-					$cnt++;
-				}
-			}
-			$chart_data['monthly'][] = $cnt;
+			$chart_data['monthly'][] = $monthly_counts[$mk];
 		}
 
 		echo json_encode($chart_data);

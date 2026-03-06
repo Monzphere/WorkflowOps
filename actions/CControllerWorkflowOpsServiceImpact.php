@@ -84,9 +84,6 @@ class CControllerWorkflowOpsServiceImpact extends CController {
 		exit;
 	}
 
-	/**
-	 * Retorna service_trees para uso server-side (ex: workflow view).
-	 */
 	public static function getServiceTreesForHost(string $hostid): array {
 		try {
 			$instance = new self();
@@ -348,9 +345,6 @@ class CControllerWorkflowOpsServiceImpact extends CController {
 
 	private function fastSlaLookup(string $serviceid): ?array {
 		try {
-			if (!class_exists('API')) {
-				return null;
-			}
 			$slas = API::SLA()->get([
 				'output' => ['slaid', 'name', 'slo'],
 				'serviceids' => [$serviceid],

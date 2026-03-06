@@ -124,6 +124,15 @@
 	border-left-color: #d1d5db;
 }
 
+[theme="dark-theme"] .mnz-workflow-card-trigger-primary {
+	border-left-color: #ef5350;
+}
+
+[theme="dark-theme"] .mnz-workflow-card-badge-small {
+	background: rgba(239, 83, 80, 0.2);
+	color: #ef5350;
+}
+
 [theme="dark-theme"] .mnz-workflow-card-metrics {
 	border-left-color: #5dade2;
 }

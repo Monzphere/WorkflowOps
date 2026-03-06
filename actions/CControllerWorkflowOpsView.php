@@ -198,13 +198,14 @@ class CControllerWorkflowOpsView extends CController {
 			$hostid = !empty($trigger['hosts']) ? (int) $trigger['hosts'][0]['hostid'] : 0;
 			if ($hostid > 0) {
 				$hosts_raw = API::Host()->get([
-					'output' => ['hostid', 'host', 'name', 'description', 'status', 'monitored_by', 'proxyid'],
+					'output' => ['hostid', 'host', 'name', 'description', 'status', 'monitored_by', 'proxyid', 'inventory_mode'],
 					'hostids' => [$hostid],
 					'selectHostGroups' => ['groupid', 'name'],
 					'selectParentTemplates' => ['templateid', 'host', 'name'],
 					'selectTags' => ['tag', 'value'],
 					'selectInterfaces' => ['ip', 'dns', 'port', 'main', 'useip'],
-					'selectDashboards' => ['hostid', 'dashboardid', 'name']
+					'selectDashboards' => ['hostid', 'dashboardid', 'name'],
+					'selectInventory' => ['os', 'hardware', 'software', 'contact', 'location', 'serialno_a', 'model', 'vendor', 'type']
 				]);
 				if (!empty($hosts_raw)) {
 					$data['hosts'][$hostid] = $hosts_raw[0];

@@ -538,7 +538,6 @@ $html_page = (new CHtmlPage())
 $is_refresh = $data['is_refresh'] ?? false;
 $content = (new CDiv())->addClass('mnz-workflow-wrapper' . ($is_single ? ' mnz-workflow-single-page' : '') . ($is_popup ? ' mnz-workflow-popup' : ''))->setId('mnz-workflow-content');
 
-// Script do view object PRIMEIRO para garantir que menu popup (Configuration > Items) funcione
 require_once dirname(__FILE__).'/../../../include/classes/helpers/CCsrfTokenHelper.php';
 $content->addItem((new CScriptTag(
 	'window.view=window.view||{};'.
@@ -646,7 +645,6 @@ if (empty($problems)) {
 
 		$wf_nodes = [];
 
-		// Problem
 		$problem_card = (new CDiv())->addClass('mnz-workflow-card mnz-workflow-card-problem');
 		$problem_header_content = [(new CSpan())->addClass(ZBX_ICON_ALERTS)->addClass('mnz-workflow-card-icon'), _('Problem')];
 		if ($is_single && $triggerid > 0) {
@@ -772,6 +770,9 @@ if (empty($problems)) {
 			} else {
 				$host_card->addItem((new CDiv($host_name))->addClass('mnz-workflow-card-title'));
 			}
+			if ($host && isset($host['status']) && (int) $host['status'] === HOST_STATUS_NOT_MONITORED) {
+				$host_card->addItem((new CSpan(_('Disabled')))->addClass('mnz-workflow-card-badge status-red'));
+			}
 			$host_ip = '';
 			if ($host && !empty($host['interfaces'])) {
 				$main_if = null;
@@ -792,6 +793,10 @@ if (empty($problems)) {
 			}
 			if ($host_ip !== '') {
 				$host_card->addItem((new CDiv($host_ip))->addClass('mnz-workflow-card-meta'));
+			}
+			$host_description = trim($host['description'] ?? '');
+			if ($is_single && $host_description !== '') {
+				$host_card->addItem((new CDiv($host_description))->addClass('mnz-workflow-card-detail'));
 			}
 			$host_proxyid = (int) ($host['proxyid'] ?? 0);
 			if ($host_proxyid > 0) {
@@ -815,6 +820,30 @@ if (empty($problems)) {
 				$htg = makeTagsCompact($host_tags);
 				if ($htg !== null) {
 					$host_card->addItem($htg);
+				}
+			}
+			if ($is_single && $host && !empty($host['inventory'])) {
+				$inv = $host['inventory'];
+				$inv_fields = [
+					'type' => _('Type'),
+					'os' => _('OS'),
+					'hardware' => _('Hardware'),
+					'software' => _('Software'),
+					'vendor' => _('Vendor'),
+					'model' => _('Model'),
+					'serialno_a' => _('Serial number'),
+					'location' => _('Location'),
+					'contact' => _('Contact')
+				];
+				$inv_items = [];
+				foreach ($inv_fields as $key => $label) {
+					$val = trim($inv[$key] ?? '');
+					if ($val !== '') {
+						$inv_items[] = $label . ': ' . $val;
+					}
+				}
+				if (!empty($inv_items)) {
+					$host_card->addItem((new CDiv(implode(' · ', $inv_items)))->addClass('mnz-workflow-card-detail'));
 				}
 			}
 		} else {
@@ -885,8 +914,12 @@ if (empty($problems)) {
 			));
 		}
 
-		$trigger_card = (new CDiv())->addClass('mnz-workflow-card mnz-workflow-card-trigger');
-		$trigger_card->addItem((new CDiv([(new CSpan())->addClass(ZBX_ICON_DATA_COLLECTION)->addClass('mnz-workflow-card-icon'), _('Trigger')]))->addClass('mnz-workflow-card-header'));
+		$trigger_card = (new CDiv())->addClass('mnz-workflow-card mnz-workflow-card-trigger mnz-workflow-card-trigger-primary');
+		$trigger_header_items = [(new CSpan())->addClass(ZBX_ICON_DATA_COLLECTION)->addClass('mnz-workflow-card-icon'), _('Trigger')];
+		if ($is_single) {
+			$trigger_header_items[] = (new CSpan(_('this event')))->addClass('mnz-workflow-card-badge-small');
+		}
+		$trigger_card->addItem((new CDiv($trigger_header_items))->addClass('mnz-workflow-card-header'));
 		$trigger_desc = $trigger ? ($trigger['description'] ?? '') : _('N/A');
 		$workflow_backurl = (new CUrl('zabbix.php'))
 			->setArgument('action', 'workflow.ops.view')
@@ -920,6 +953,31 @@ if (empty($problems)) {
 		if ($trigger && !empty($trigger['opdata'])) {
 			$trigger_card->addItem((new CDiv(['Op. data: ', $trigger['opdata']]))->addClass('mnz-workflow-card-detail'));
 		}
+		$trigger_comments = $trigger ? trim($trigger['comments'] ?? '') : '';
+		if ($is_single && $trigger_comments !== '') {
+			$trigger_card->addItem((new CDiv([_('Description') . ': ', $trigger_comments]))->addClass('mnz-workflow-card-detail'));
+		}
+		if ($trigger && !empty($trigger['url'])) {
+			$trigger_card->addItem((new CDiv([
+				_('URL') . ': ',
+				(new CLink($trigger['url'], $trigger['url']))
+					->addClass('mnz-workflow-card-link')
+					->setAttribute('target', '_blank')
+					->setAttribute('rel', 'noopener noreferrer')
+			]))->addClass('mnz-workflow-card-detail'));
+		}
+		if ($is_single && $trigger) {
+			$trigger_meta = [];
+			if (isset($trigger['priority'])) {
+				$trigger_meta[] = _('Severity') . ': ' . CSeverityHelper::getName((int) $trigger['priority']);
+			}
+			if (isset($trigger['manual_close']) && (int) $trigger['manual_close'] === ZBX_TRIGGER_MANUAL_CLOSE_ALLOWED) {
+				$trigger_meta[] = _('Manual close') . ': ' . _('Yes');
+			}
+			if (!empty($trigger_meta)) {
+				$trigger_card->addItem((new CDiv(implode(' · ', $trigger_meta)))->addClass('mnz-workflow-card-meta'));
+			}
+		}
 		if (!empty($trigger_tags)) {
 			$tg = makeTagsCompact($trigger_tags);
 			if ($tg !== null) {
@@ -935,8 +993,6 @@ if (empty($problems)) {
 				$metrics_card->addItem((new CDiv([(new CSpan())->addClass(ZBX_ICON_I)->addClass('mnz-workflow-card-icon'), _('Item')]))->addClass('mnz-workflow-card-header'));
 				if ($problem_clock > 0) {
 					$metrics_card->addItem((new CDiv(zbx_date2str(DATE_TIME_FORMAT_SECONDS, $problem_clock)))->addClass('mnz-workflow-card-meta'));
-				}
-				if ($problem_clock > 0) {
 					$spark_from = $problem_clock - 6 * 3600;
 					$spark_from_str = date('Y-m-d H:i:s', $spark_from);
 					$spark_to_str = date('Y-m-d H:i:s', $problem_clock);
@@ -1051,7 +1107,7 @@ if (empty($problems)) {
 						$first = false;
 						$t_url = (new CUrl('zabbix.php'))->setArgument('action', 'trigger.edit')->setArgument('triggerid', $tinfo['triggerid'])->setArgument('context', 'host')->getUrl();
 						$label = $tinfo['description'];
-						if ($tinfo['triggerid'] == $triggerid) {
+						if ((int) $tinfo['triggerid'] === $triggerid) {
 							$label = $label . ' (' . _('this event') . ')';
 						}
 						$triggers_div->addItem((new CLink($label, $t_url))->addClass('mnz-workflow-card-link'));
@@ -1073,19 +1129,16 @@ if (empty($problems)) {
 				foreach ($trigger['items'] as $item) {
 					$item_triggers = $triggers_by_item[$item['itemid']] ?? [];
 					foreach ($item_triggers as $tinfo) {
-						$tid = $tinfo['triggerid'];
+						$tid = (int) $tinfo['triggerid'];
 						if (!in_array($tid, $display_trigger_ids, true)) {
 							$display_trigger_ids[] = $tid;
 						}
 					}
 				}
-			} else {
-				$display_trigger_ids = [$triggerid];
 			}
-			if (empty($display_trigger_ids)) {
-				$display_trigger_ids = [$triggerid];
+			if (!in_array($triggerid, $display_trigger_ids, true)) {
+				array_unshift($display_trigger_ids, $triggerid);
 			}
-			$display_trigger_ids = array_values(array_unique($display_trigger_ids));
 			usort($display_trigger_ids, function ($a, $b) use ($triggerid) {
 				if ($a === $triggerid) return -1;
 				if ($b === $triggerid) return 1;
@@ -1120,7 +1173,6 @@ if (empty($problems)) {
 			$flow->addItem($trigger_card);
 		}
 
-		// Problem (evento)
 		if ($is_single) {
 			$wf_nodes[] = ['problem', $problem_card];
 
@@ -1585,7 +1637,6 @@ function makeTriggerNodeCard(array $t, array $trigger_template_by_id, string $wo
 }
 
 function makeWorkflowNode(string $type, CDiv $body): CDiv {
-	/* Um único ponto de conexão por nó (estilo Network Topology): um dot à direita do card */
 	$connector = (new CDiv())->addClass('mnz-workflow-node-connector')->setAttribute('data-wf-connector', 'center');
 	$connector->addItem((new CSpan())->addClass('mnz-workflow-connector-dot'));
 	$node = (new CDiv())
@@ -1640,7 +1691,6 @@ if (!$is_refresh) {
 		$content->addItem((new CTag('script', true))->setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'));
 	}
 	ob_start();
-	$wf_refresh_url = $wf_refresh_url;
 	$wf_layout_save_url = (new CUrl('zabbix.php'))->setArgument('action', 'workflow.ops.layout.save')->getUrl();
 	$wf_analysis_url = (new CUrl('zabbix.php'))->setArgument('action', 'workflow.ops.incident.analysis')->getUrl();
 	include dirname(__FILE__).'/js/workflow.ops.view.js.php';
